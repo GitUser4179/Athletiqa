@@ -26,8 +26,8 @@ The project was developed as part of the Chas Challenge 2026 with the theme Tech
 - Stripe payment integration
 - Email testing with Mailpit
 - Responsive frontend
-- Kubernetes deployment
-- Automated CI/CD pipelines
+- Deployed on Azure Container Apps + Azure SQL
+- Automated CI/CD with GitHub Actions
 
 ## Tech Stack
 ### Frontend
@@ -40,34 +40,15 @@ The project was developed as part of the Chas Challenge 2026 with the theme Tech
 - SQL Server
 - DevOps & Infrastructure
 - Docker
-- GitLab CI/CD
-- Kubernetes
-- Traefik Ingress
+- GitHub Actions
+- Azure Container Apps, Azure Container Registry, Azure SQL Database
 - Mailpit
 
 
 ## Live Demo
-### Frontend
-```
-https://athletiqa.cc.k3s.chas-lab.dev
-```
-### Backend API
-```
-https://api-athletiqa.cc.k3s.chas-lab.dev
-```
-### Mailpit
-```
-https://mailpit-athletiqa.cc.k3s.chas-lab.dev
-```
-## Demo Login
+The app runs on Azure Container Apps. The deploy script prints the URLs (frontend and Mailpit) when it finishes; see [docs/azure.md](docs/azure.md).
 
-### Athlete Account
-Email: demo@athletiqa.com
-Password: ********
-
-### Sponsor Account
-Email: sponsor@athletiqa.com
-Password: ********
+Log in with the seeded demo accounts listed under [Seed users](#seed-users-for-local-login).
 
 ## Project Overview
 Athletiqa is a platform that enables athletes to find and create connections with sponsors. Athletes post updates and start campaigns showcasing a hint into their sport-life, and sponsors donate, earn medals and chat with athletes through messages and notifications.
@@ -79,13 +60,14 @@ This is our school project for Chas Academy by Ninetech (Group 9)
 - `backend/` - .NET API with SQL Server, Identity Auth, Carter for Endpoints, MediatR for handlers.
 - `frontend/` - React + Vite app utilizing a Feature-Sliced Design folder layout.
 - `docker-compose.yml` - Spins up SQL Server, backend, frontend and Mailpit for local dev.
-- `k8s/`, `deploy`, `monitoring/` - Deployment and monitoring
+- `deploy/azure/` - Azure deployment script (Container Apps, ACR, Azure SQL)
+- `.github/workflows/` - CI/CD: build check and deploy to Azure on push to `main`
 
 ## Tech stack
 
 **Backend:** .NET, EF Core, SQL server, Carter, MediatR, FluentValidation, SignalR, Stripe, Cloudinary
 **Frontend:** React, Vite, Tailwind CSS
-**Infra:** Docker, Kubernetes
+**Infra:** Docker, Azure Container Apps, Azure SQL, GitHub Actions
 
 ## Getting started
 
@@ -96,8 +78,8 @@ The easiest way to run the porject is through Docker. Call on the Docker Compose
 ### Clone repository
 
 ```
-git clone https://git.chas-lab.dev/chas-challenge-2026/grupp-9/ninetech.git
-cd ninetech
+git clone https://github.com/GitUser4179/Athletiqa.git
+cd Athletiqa
 ```
 ### Start with Docker
 
@@ -105,27 +87,37 @@ cd ninetech
 docker compose up --build
 ```
 
+## Deployment (Azure)
+
+The app is hosted on **Azure Container Apps**:
+
+- `athletiqa-web`: nginx serving the React build (public). It reverse-proxies `/api` and `/hubs` to the API, so the browser sees a single origin. Cookies, CORS and SignalR need no cross-domain setup.
+- `athletiqa-api`: the .NET API (internal only)
+- `athletiqa-mail`: Mailpit for confirmation and reset emails (web UI behind basic auth)
+- `athletiqa-migrate`: a one-off job that runs EF Core migrations before each rollout
+- **Azure SQL Database** (serverless, free offer)
+
+First-time setup and CI configuration: [docs/azure.md](docs/azure.md).
+
 ### CI/CD Pipeline
 
-The project uses GitLab CI/CD for:
+`.github/workflows/deploy-azure.yml` builds the backend and frontend, then on push to `main` builds the images in Azure Container Registry, runs migrations, and rolls out the new images.
 
-- Docker image builds
-- Automated testing
-- Kubernetes deployments
-- TLS/URL health checks
-- Review environments
+### Configuration
 
-Deployments are automatically managed through Kubernetes using Traefik ingress routing.
+The backend reads these settings (environment variables use `__` for nesting):
 
-## Kubernetes
+| Setting | Purpose |
+| --- | --- |
+| `ConnectionStrings__DefaultConnection` | SQL Server connection string |
+| `FrontendUrl` | Public URL used in email links and Stripe redirects |
+| `AllowedOrigins` | Comma-separated CORS origins (only needed if the frontend is on another origin) |
+| `CookieDomain` | Optional. Shares the auth cookie across subdomains; leave empty for a single origin |
+| `EmailSettings__Host` / `__Port` | SMTP server (Mailpit) |
+| `Stripe__SecretKey`, `Stripe__WebhookSecret` | Stripe |
+| `Cloudinary__CloudName`, `__ApiKey`, `__ApiSecret`, `__RootFolder` | Cloudinary uploads |
 
-The application is deployed on Kubernetes with:
-
-- Frontend deployment
-- Backend deployment
-- Database service
-- Ingress routing
-- Automated deployment pipelines
+The frontend image takes `BACKEND_URL` at runtime (enables the `/api` + `/hubs` proxy) and `VITE_API_URL` at build time (leave empty to call the API on the same origin).
 
 ## Branching Strategy
 

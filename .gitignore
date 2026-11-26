@@ -8,3 +8,5 @@ node_modules/
 gitlab-runner/
 backend/appsettings.Development.json
 /backend/backend.csproj.lscache
+# Azure deploy script local secrets
+deploy/azure/.local/

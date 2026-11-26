@@ -70,8 +70,8 @@ public class CreateStripeAccountHandler : IRequestHandler<Command, CreateStripeA
             new AccountLinkCreateOptions
             {
                 Account = user.StripeAccountId,
-                RefreshUrl = "https://athletiqa.cc.k3s.chas-lab.dev/settings",  // no refresh page yet, takes user to settings instead
-                ReturnUrl = "https://athletiqa.cc.k3s.chas-lab.dev/stripe-success", // returns the user to stripe-success-page when account is created
+                RefreshUrl = $"{(_configuration["FrontendUrl"] ?? "http://localhost:3000").TrimEnd('/')}/settings",  // no refresh page yet, takes user to settings instead
+                ReturnUrl = $"{(_configuration["FrontendUrl"] ?? "http://localhost:3000").TrimEnd('/')}/stripe-success", // returns the user to stripe-success-page when account is created
                 Type = "account_onboarding"
             },
             cancellationToken: cancellationToken

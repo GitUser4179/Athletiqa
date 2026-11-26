@@ -101,10 +101,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     }
     else
     {
-        // Production (Subdomains): Shared domain cookie over HTTPS
+        // Production: cookie over HTTPS. Set CookieDomain (e.g. ".example.com") to share
+        // the cookie across subdomains; leave it empty when frontend and API share one origin (Azure).
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.Domain = ".cc.k3s.chas-lab.dev";
+        var cookieDomain = builder.Configuration["CookieDomain"];
+        if (!string.IsNullOrWhiteSpace(cookieDomain))
+            options.Cookie.Domain = cookieDomain;
     }
 
     options.Events.OnRedirectToLogin = context =>

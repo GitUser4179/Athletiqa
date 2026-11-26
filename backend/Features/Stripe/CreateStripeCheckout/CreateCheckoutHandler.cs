@@ -73,8 +73,8 @@ namespace backend.Features.Stripe.CreatePayment
                     }
                 },
                 Mode = "payment",
-                SuccessUrl = "https://athletiqa.cc.k3s.chas-lab.dev/donate-success",
-                CancelUrl = $"https://athletiqa.cc.k3s.chas-lab.dev/campaign/{command.campaignId}", //takes user back to campaign if canceled
+                SuccessUrl = $"{(_configuration["FrontendUrl"] ?? "http://localhost:3000").TrimEnd('/')}/donate-success",
+                CancelUrl = $"{(_configuration["FrontendUrl"] ?? "http://localhost:3000").TrimEnd('/')}/campaign/{command.campaignId}", //takes user back to campaign if canceled
                 Metadata = new Dictionary<string, string>
                 {
                     {"campaign_id", command.campaignId.ToString()},
