@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "./useAuth";
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export function checkRole() {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated, currentUserId } = useAuth();
 
   useEffect(() => {
     fetch(`${API_BASE}/api/users/me`, {
@@ -26,7 +28,7 @@ export function checkRole() {
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [isAuthenticated, currentUserId]);
 
   return {
     role,

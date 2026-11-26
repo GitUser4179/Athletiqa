@@ -13,5 +13,6 @@ public record GetPostResponse(
     int LikeCount = 0,
     int CommentCount = 0,
     bool IsLiked = false, // whether the current (logged in) user has liked the post
-    bool IsFollowing = false // whether the current user follows the post's athlete
+    bool IsFollowing = false, // whether the current user follows the post's athlete
+    bool IsOwnPost = false // whether the current user wrote the post (shows edit/delete instead of follow)
 );

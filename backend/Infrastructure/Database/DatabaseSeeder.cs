@@ -136,9 +136,40 @@ public static class DatabaseSeeder
 				await db.SaveChangesAsync();
 			}
 
-			const string SeedImageUrl = "https://res.cloudinary.com/demo/image/upload/sample.jpg";
-			const string SeedImageAltUrl = "https://res.cloudinary.com/demo/image/upload/e_sepia/sample.jpg";
-			const string SeedVideoUrl = "https://res.cloudinary.com/demo/video/upload/dog.mp4";
+			// Real, free-to-use sports photos from Pexels (https://www.pexels.com/license/)
+			static string Px(int id) => $"https://images.pexels.com/photos/{id}/pexels-photo-{id}.jpeg?auto=compress&cs=tinysrgb&w=1200";
+			
+			var seedPhotos = new Dictionary<string, string[]>
+			{
+				["Hjälp mig nå mitt mål!"] = [Px(3886235), Px(12358254)],
+				["Morgonpass på konstgräset"] = [Px(33257253)],
+				["Teknikträning med laget"] = [Px(12358254)],
+				["Bilder från helgens match"] = [Px(3886235), Px(33257253), Px(12358254)],
+				["Nya fotbollsskor inför säsongen"] = [Px(12358254), Px(3886235)],
+				["Stötta min träning!"] = [Px(3764014), Px(3756042), Px(3764011)],
+				["Dubbelpass – volleyboll och tennis!"] = [Px(4450464), Px(7613507)],
+				["Nytt personbästa i servehastighet!"] = [Px(3818835)],
+				["Ny tennisutrustning inför tävlingssäsongen"] = [Px(1432039), Px(7613507), Px(3818835)],
+				["Matchens lirare!"] = [Px(33257253)],
+				["Extra skottträning"] = [Px(37356517)],
+				["Resa till basketlägret i Spanien"] = [Px(2874717), Px(31177167)],
+				["Nya koreografin klar!"] = [Px(7207569)],
+				["Starkare än någonsin"] = [Px(7186308)],
+				["Tävlingsdräkt och träningsläger"] = [Px(7186308), Px(7207569)],
+				["Vinst med laget!"] = [Px(12358254)],
+				["Regnträning är bästa träningen"] = [Px(3886235)],
+				["Isen var perfekt idag"] = [Px(8975011)],
+				["Dubbelpass!"] = [Px(13978859), Px(1770650)],
+				["Magiskt ridpass"] = [Px(4895011)],
+				["Tävlingshelg!"] = [Px(30728846), Px(4894985)],
+				["Ny höjd i längdhoppet!"] = [Px(13041311), Px(23371780)],
+				["Kvällspass i hallen"] = [Px(2874717)],
+				["Blockfest!"] = [Px(6180408)],
+				["Match på gång"] = [Px(4450464)],
+				["Nytt racketgrepp – ny känsla"] = [Px(3771083)],
+				["Snabbaste reflexerna hittills"] = [Px(8796050)],
+				["Badmintonpass med fokus på smashar"] = [Px(14605729), Px(8007094)],
+			};
 
 			async Task<Post> SeedPostAsync(
 				string athleteId,
@@ -545,36 +576,51 @@ public static class DatabaseSeeder
 				await db.SaveChangesAsync();
 			}
 
+			// Upgrade older databases: give the debug seed posts/comments real titles and text.
+			// Must run before the SeedPostAsync calls below, which look posts up by title.
+			async Task RenameSeedPostAsync(string athleteId, string oldTitle, string newTitle, string newContent)
+			{
+				var post = await db.Post.FirstOrDefaultAsync(p => p.AthleteId == athleteId && p.Title == oldTitle);
+				if (post is null) return;
+				post.Title = newTitle;
+				post.Content = newContent;
+				await db.SaveChangesAsync();
+			}
+			await RenameSeedPostAsync(alice.Id, "Seed image only", "Morgonpass på konstgräset", "Började dagen med ett tidigt pass på konstgräset: passningar, avslut och extra fokus på vänsterfoten. Det känns som att formen är på väg åt rätt håll inför säsongen!");
+			await RenameSeedPostAsync(alice.Id, "Seed video only", "Teknikträning med laget", "Kvällens pass handlade om snabba vändningar och bollmottagning under press. Tränaren filmade allt så att vi kunde gå igenom detaljerna efteråt – supernyttigt!");
+			await RenameSeedPostAsync(alice.Id, "Seed mixed media", "Bilder från helgens match", "Vilken helg! Vi vann med 3–1 och jag fick göra ett av målen. Här är några bilder från matchen – tack till alla som kom och hejade!");
+			await RenameSeedPostAsync(alice.Id, "Seed completed mixed campaign", "Nya fotbollsskor inför säsongen", "Tack vare er har jag kunnat köpa nya skor och benskydd inför säsongen. Insamlingen är full – tusen tack till alla som stöttade!");
+			await RenameSeedPostAsync(adison.Id, "Seed tennis equipment campaign", "Ny tennisutrustning inför tävlingssäsongen", "Mina racketar och skor är slitna efter ett långt år av träning. Med ert stöd kan jag skaffa ny utrustning och fortsätta satsa mot SM.");
+			await RenameSeedPostAsync(gustavo.Id, "Seed basketball travel campaign", "Resa till basketlägret i Spanien", "I sommar har jag chansen att åka på ett internationellt basketläger i Spanien. Varje bidrag hjälper mig att täcka resa och boende.");
+			await RenameSeedPostAsync(mira.Id, "Seed gymnastics media campaign", "Tävlingsdräkt och träningsläger", "Jag har tagit mig till regionfinalen i gymnastik! Nu samlar jag in till en ny tävlingsdräkt och ett veckolångt träningsläger.");
+			await db.Comment.Where(c => c.Content == "Snygg bild, kul att se utvecklingen!").ExecuteUpdateAsync(c => c.SetProperty(x => x.Content, "Snyggt pass, kul att se utvecklingen!"));
+			await db.Comment.Where(c => c.Content == "Videon fungerar bra i flödet.").ExecuteUpdateAsync(c => c.SetProperty(x => x.Content, "Grym teknik, ser ut som ett riktigt bra pass!"));
+			await db.Comment.Where(c => c.Content == "Bra test för flera medier i samma inlägg.").ExecuteUpdateAsync(c => c.SetProperty(x => x.Content, "Grattis till segern, vilket mål!"));
+			await db.Comment.Where(c => c.Content == "Det här borde synas korrekt i modalen.").ExecuteUpdateAsync(c => c.SetProperty(x => x.Content, "Snygga bilder! Lycka till i nästa match."));
+
 			var aliceImagePost = await SeedPostAsync(
 				alice.Id,
-				"Seed image only",
-				"Debug post with a single Cloudinary image.",
-				[(SeedImageUrl, MediaType.Image)]);
+				"Morgonpass på konstgräset",
+				"Började dagen med ett tidigt pass på konstgräset: passningar, avslut och extra fokus på vänsterfoten. Det känns som att formen är på väg åt rätt håll inför säsongen!",
+				[]);
 
 			var aliceVideoPost = await SeedPostAsync(
 				alice.Id,
-				"Seed video only",
-				"Debug post with a single Cloudinary video.",
-				[(SeedVideoUrl, MediaType.Video)]);
+				"Teknikträning med laget",
+				"Kvällens pass handlade om snabba vändningar och bollmottagning under press. Tränaren filmade allt så att vi kunde gå igenom detaljerna efteråt – supernyttigt!",
+				[]);
 
 			var aliceMixedPost = await SeedPostAsync(
 				alice.Id,
-				"Seed mixed media",
-				"Debug post with image, video, and image media.",
-				[
-					(SeedImageUrl, MediaType.Image),
-						(SeedVideoUrl, MediaType.Video),
-						(SeedImageAltUrl, MediaType.Image)
-				]);
+				"Bilder från helgens match",
+				"Vilken helg! Vi vann med 3–1 och jag fick göra ett av målen. Här är några bilder från matchen – tack till alla som kom och hejade!",
+				[]);
 
 			var completedCampaignPost = await SeedPostAsync(
 				alice.Id,
-				"Seed completed mixed campaign",
-				"Debug campaign that is already funded and contains mixed media.",
-				[
-					(SeedImageAltUrl, MediaType.Image),
-						(SeedVideoUrl, MediaType.Video)
-				]);
+				"Nya fotbollsskor inför säsongen",
+				"Tack vare er har jag kunnat köpa nya skor och benskydd inför säsongen. Insamlingen är full – tusen tack till alla som stöttade!",
+				[]);
 
 			var completedCampaign = await SeedCampaignAsync(
 				completedCampaignPost,
@@ -584,9 +630,9 @@ public static class DatabaseSeeder
 
 			var adisonCampaignPost = await SeedPostAsync(
 				adison.Id,
-				"Seed tennis equipment campaign",
-				"Debug campaign for testing the homepage carousel with a real active tennis campaign.",
-				[(SeedImageUrl, MediaType.Image)]);
+				"Ny tennisutrustning inför tävlingssäsongen",
+				"Mina racketar och skor är slitna efter ett långt år av träning. Med ert stöd kan jag skaffa ny utrustning och fortsätta satsa mot SM.",
+				[]);
 
 			await SeedCampaignAsync(
 				adisonCampaignPost,
@@ -596,9 +642,9 @@ public static class DatabaseSeeder
 
 			var gustavoCampaignPost = await SeedPostAsync(
 				gustavo.Id,
-				"Seed basketball travel campaign",
-				"Debug campaign for testing another active campaign card with seeded backend data.",
-				[(SeedImageAltUrl, MediaType.Image)]);
+				"Resa till basketlägret i Spanien",
+				"I sommar har jag chansen att åka på ett internationellt basketläger i Spanien. Varje bidrag hjälper mig att täcka resa och boende.",
+				[]);
 
 			await SeedCampaignAsync(
 				gustavoCampaignPost,
@@ -608,12 +654,9 @@ public static class DatabaseSeeder
 
 			var miraCampaignPost = await SeedPostAsync(
 				mira.Id,
-				"Seed gymnastics media campaign",
-				"Debug campaign with mixed media so campaign cards can be checked against real seeded data.",
-				[
-					(SeedImageUrl, MediaType.Image),
-						(SeedVideoUrl, MediaType.Video)
-				]);
+				"Tävlingsdräkt och träningsläger",
+				"Jag har tagit mig till regionfinalen i gymnastik! Nu samlar jag in till en ny tävlingsdräkt och ett veckolångt träningsläger.",
+				[]);
 
 			await SeedCampaignAsync(
 				miraCampaignPost,
@@ -633,10 +676,10 @@ public static class DatabaseSeeder
 				.OrderBy(c => c.DonationCampaignId)
 				.FirstAsync();
 
-			await SeedCommentAsync(aliceImagePost, bob.Id, "Snygg bild, kul att se utvecklingen!", DateTime.UtcNow.AddHours(-8));
-			await SeedCommentAsync(aliceVideoPost, erikCompany.Id, "Videon fungerar bra i flödet.", DateTime.UtcNow.AddHours(-7));
-			await SeedCommentAsync(aliceMixedPost, bob.Id, "Bra test för flera medier i samma inlägg.", DateTime.UtcNow.AddHours(-6));
-			await SeedCommentAsync(aliceMixedPost, charlie.Id, "Det här borde synas korrekt i modalen.", DateTime.UtcNow.AddHours(-5));
+			await SeedCommentAsync(aliceImagePost, bob.Id, "Snyggt pass, kul att se utvecklingen!", DateTime.UtcNow.AddHours(-8));
+			await SeedCommentAsync(aliceVideoPost, erikCompany.Id, "Grym teknik, ser ut som ett riktigt bra pass!", DateTime.UtcNow.AddHours(-7));
+			await SeedCommentAsync(aliceMixedPost, bob.Id, "Grattis till segern, vilket mål!", DateTime.UtcNow.AddHours(-6));
+			await SeedCommentAsync(aliceMixedPost, charlie.Id, "Snygga bilder! Lycka till i nästa match.", DateTime.UtcNow.AddHours(-5));
 
 			await SeedLikeAsync(aliceImagePost, bob.Id);
 			await SeedLikeAsync(aliceVideoPost, bob.Id);
@@ -650,6 +693,32 @@ public static class DatabaseSeeder
 			await SeedDonationAsync(aliceCampaign, bob.Id, 250, "succeeded", "seed_bob_donation_004", "Bobs Gym & Co");
 			await SeedDonationAsync(charlieCampaign, bob.Id, 300, "succeeded", "seed_bob_donation_005", "Bobs Gym & Co");
 			await SeedDonationAsync(aliceCampaign, erikCompany.Id, 500, "expired", "seed_erik_donation_expired_001", "Eriks & Co");
+
+			// Seeded posts get real photos. Posts whose media was uploaded by a real user are left untouched.
+			static bool IsPlaceholderMedia(string url) =>
+				url.Contains("placehold.co") || url.Contains("res.cloudinary.com/demo/");
+
+			foreach (var (title, urls) in seedPhotos)
+			{
+				var posts = await db.Post
+					.Include(p => p.MediaContents)
+					.Where(p => p.Title == title)
+					.ToListAsync();
+
+				foreach (var post in posts)
+				{
+					if (post.MediaContents.Any(m => !IsPlaceholderMedia(m.MediaUrl)))
+						continue;
+
+					db.MediaContent.RemoveRange(post.MediaContents);
+					post.MediaContents.Clear();
+					foreach (var url in urls)
+					{
+						post.MediaContents.Add(new MediaContent { MediaUrl = url, MediaType = MediaType.Image });
+					}
+				}
+			}
+			await db.SaveChangesAsync();
 
 		}
 	}

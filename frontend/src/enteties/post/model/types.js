@@ -15,5 +15,6 @@ export function mapPostFromApi(dto) {
     comments: Number(dto.commentCount || 0),
     isLiked: Boolean(dto.isLiked),
     isFollowing: Boolean(dto.isFollowing),
+    isOwnPost: Boolean(dto.isOwnPost),
   };
 }

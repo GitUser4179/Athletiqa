@@ -418,5 +418,8 @@
   "Sidan finns inte": "Page not found",
   "Sidan du letar efter har flyttats, tagits bort eller har aldrig funnits.": "The page you're looking for has moved, been removed or never existed.",
   "Något gick fel": "Something went wrong",
-  "Ett oväntat fel uppstod. Försök ladda om sidan eller gå tillbaka till startsidan.": "An unexpected error occurred. Try reloading the page or go back to the home page."
+  "Ett oväntat fel uppstod. Försök ladda om sidan eller gå tillbaka till startsidan.": "An unexpected error occurred. Try reloading the page or go back to the home page.",
+  "Visa bild": "Show image",
+  "Föregående bild": "Previous image",
+  "Nästa bild": "Next image"
 }

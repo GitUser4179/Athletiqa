@@ -32,7 +32,8 @@ export async function listMyCampaigns() {
 
 export async function getCampaignById(id) 
 {
-    const response = await fetch(`${API_BASE}/api/donation-campaigns/${id}`);
+    // credentials: lets the API tell whether the viewer follows the athlete / owns the campaign
+    const response = await fetch(`${API_BASE}/api/donation-campaigns/${id}`, { credentials: "include" });
 
     const data = await response.json().catch(() => ({}));
     

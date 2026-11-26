@@ -55,7 +55,8 @@ public class GetPostHandler(AthletiqaDbContext db) : IRequestHandler<GetPostQuer
                 p.Likes.Count(),
                 p.Comments.Count(),
                 request.CurrentUserId != null && p.Likes.Any(l => l.UserId == request.CurrentUserId),
-                request.CurrentUserId != null && db.AthleteFollow.Any(f => f.AthleteId == p.AthleteId && f.FollowerId == request.CurrentUserId)))
+                request.CurrentUserId != null && db.AthleteFollow.Any(f => f.AthleteId == p.AthleteId && f.FollowerId == request.CurrentUserId),
+                request.CurrentUserId != null && p.AthleteId == request.CurrentUserId))
             .ToListAsync(cancellationToken);
     }
 }

@@ -193,7 +193,7 @@ export function PostModal({
                 </span>
               </Button>
 
-              {isOwnPost ? (
+              {isOwnPost || post?.isOwnPost ? (
                 <Button
                   variant="outline"
                   onClick={() => {

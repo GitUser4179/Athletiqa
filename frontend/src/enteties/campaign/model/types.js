@@ -12,5 +12,8 @@ export function mapCampaignFromApi(dto) {
     athletePhotoUrl: dto.athletePhotoUrl,
     athleteGender: dto.athleteGender,
     createdAt: dto.createdAt || null,
+    mediaUrls: dto.mediaUrls ?? [],
+    isFollowing: Boolean(dto.isFollowing),
+    isOwnCampaign: Boolean(dto.isOwnCampaign),
   };
 }

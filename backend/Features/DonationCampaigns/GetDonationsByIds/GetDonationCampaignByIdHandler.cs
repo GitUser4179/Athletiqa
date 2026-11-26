@@ -1,4 +1,4 @@
-﻿using backend.Features.DonationCampaigns.GetDonations;
+using backend.Features.DonationCampaigns.GetDonations;
 using backend.Infrastructure.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +28,10 @@ public class GetDonationCampaignByIdHandler(AthletiqaDbContext db)
                 d.Post.Athlete.User.AspNetUser.FirstName + " " + d.Post.Athlete.User.AspNetUser.LastName,
                 d.Post.Athlete.PhotoUrl,
                 (int)d.Post.Athlete.Gender,
-                d.Post.CreatedAt
+                d.Post.CreatedAt,
+                d.Post.MediaContents.OrderBy(m => m.MediaContentId).Select(m => m.MediaUrl).ToList(),
+                request.CurrentUserId != null && db.AthleteFollow.Any(f => f.AthleteId == d.Post.AthleteId && f.FollowerId == request.CurrentUserId),
+                request.CurrentUserId != null && d.Post.AthleteId == request.CurrentUserId
             ))
             .FirstOrDefaultAsync(cancellationToken);
     }

@@ -122,7 +122,7 @@ export function PostCard({
   return (
     <article className="relative w-full min-h-0 p-4 rounded-xl border border-gray-300 bg-surface flex flex-col gap-4">
       {/* Owner only ... menu in the top-right corner */}
-      {isOwnPost && (
+      {(isOwnPost || post.isOwnPost) && (
         <div className="absolute top-3 right-3 z-10" ref={menuRef}>
           <Button
             variant="none"

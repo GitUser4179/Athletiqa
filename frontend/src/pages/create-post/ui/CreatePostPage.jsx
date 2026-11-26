@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs } from '../../../shared/ui/tabs';
 import { CreatePostForm } from '../../../features/create-post';
 import { CreateCampaignForm } from '../../../features/create-campaign';
 
 export default function CreatePostPage() {
-    const [activeTab, setActiveTab] = useState("post");
+    // ?tab=campaign opens the campaign form directly (e.g. from "Skapa en ny insamling" on the profile)
+    const [searchParams] = useSearchParams();
+    const [activeTab, setActiveTab] = useState(searchParams.get("tab") === "campaign" ? "campaign" : "post");
 
   return (
     <main className="w-full flex flex-col items-center pt-10 pb-20 gap-10">

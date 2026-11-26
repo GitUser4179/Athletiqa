@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "./useAuth";
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export function useCurrentUser() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, currentUserId } = useAuth();
 
   useEffect(() => {
     let ignore = false;
@@ -39,7 +41,7 @@ export function useCurrentUser() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [isAuthenticated, currentUserId]);
 
   return { currentUser, isLoading };
 }
