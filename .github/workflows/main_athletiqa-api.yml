@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - 'main'
+    paths:
+      - 'backend/**'
+      - '.github/workflows/main_athletiqa-api.yml'
   workflow_dispatch:
 
 jobs:
@@ -24,10 +27,22 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
+        run: dotnet build backend/backend.csproj --configuration Release
+
+      - name: Install EF tool
+        run: dotnet tool install --global dotnet-ef --version 10.0.8
+
+      - name: Build migration bundle
+        run: dotnet ef migrations bundle --project backend/backend.csproj --startup-project backend/backend.csproj --configuration Release --self-contained -r linux-x64 --output "${{ runner.temp }}/efbundle"
+
+      - name: Upload migration bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ef-migrations
+          path: ${{ runner.temp }}/efbundle
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish backend/backend.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -47,7 +62,20 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-      
+
+      - name: Download migration bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ef-migrations
+          path: ${{ runner.temp }}/migrations
+
+      - name: Apply EF migrations
+        env:
+          SQL_CONNECTION: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+        run: |
+          chmod +x "${{ runner.temp }}/migrations/efbundle"
+          "${{ runner.temp }}/migrations/efbundle" --connection "$SQL_CONNECTION"
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -62,4 +90,3 @@ jobs:
           app-name: 'athletiqa-api'
           slot-name: 'Production'
           package: .
-          
