@@ -73,6 +73,10 @@ jobs:
         env:
           SQL_CONNECTION: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
         run: |
+          if [ -z "$SQL_CONNECTION" ]; then
+            echo "::error::Repository secret AZURE_SQL_CONNECTION_STRING is missing or empty (Settings > Secrets and variables > Actions > Repository secrets)"
+            exit 1
+          fi
           chmod +x "${{ runner.temp }}/migrations/efbundle"
           "${{ runner.temp }}/migrations/efbundle" --connection "$SQL_CONNECTION"
 
