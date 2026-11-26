@@ -33,7 +33,7 @@ jobs:
         run: dotnet tool install --global dotnet-ef --version 10.0.8
 
       - name: Build migration bundle
-        run: dotnet ef migrations bundle --project backend/backend.csproj --startup-project backend/backend.csproj --configuration Release --self-contained -r linux-x64 --output "${{ runner.temp }}/efbundle"
+        run: dotnet ef migrations bundle --project backend/backend.csproj --startup-project backend/backend.csproj --configuration Release -r linux-x64 --output "${{ runner.temp }}/efbundle"
 
       - name: Upload migration bundle
         uses: actions/upload-artifact@v4
@@ -62,6 +62,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .net-app
+
+      # The migration bundle is framework-dependent (a self-contained bundle breaks Carter's assembly scanning)
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
 
       - name: Download migration bundle
         uses: actions/download-artifact@v4
