@@ -5,7 +5,7 @@ using MimeKit;
 
 namespace backend.Features.Auth.Email
 {
-	public class MailpitEmailSender(IConfiguration config) : IEmailSender<ApplicationUser>
+	public class MailpitEmailSender(IConfiguration config, ILogger<MailpitEmailSender> logger) : IEmailSender<ApplicationUser>
 	{
         // Themes from global.css in frontend
 		readonly string colorPrimary = "#0E3B6A";
@@ -135,6 +135,17 @@ namespace backend.Features.Auth.Email
         /// <returns>A task that represents the asynchronous send operation.</returns>
         private async Task SendEmailAsync(string toEmail, string subject, string htmlMessage)
 		{
+			// EmailSettings__Mode=Log: don't send anything, just write the email (and its links) to the log.
+			// Used for free showcase hosting where no mail server runs.
+			if (string.Equals(config["EmailSettings:Mode"], "Log", StringComparison.OrdinalIgnoreCase))
+			{
+				var links = System.Text.RegularExpressions.Regex.Matches(htmlMessage, "href='([^']+)'")
+					.Select(m => m.Groups[1].Value);
+				logger.LogInformation("Email (not sent, log mode) to {To}: {Subject}. Links: {Links}",
+					toEmail, subject, string.Join(" ", links));
+				return;
+			}
+
 			var host = config["EmailSettings:Host"] ?? "localhost";
 			var port = int.Parse(config["EmailSettings:Port"] ?? "1025");
 			var senderEmail = config["EmailSettings:SenderEmail"] ?? "noreply@athletiqa.com";

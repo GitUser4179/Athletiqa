@@ -68,7 +68,19 @@ function RegisterForm() {
       backgroundRepeat: "no-repeat",
     }}>
       <Card className="w-[36.75rem] py-9 px-7 z-10">
-        {isSubmitted ? (
+        {isSubmitted && import.meta.env.VITE_SKIP_EMAIL_CONFIRMATION === "true" ? (
+          <div className="text-center flex flex-col items-center gap-6 py-6 animate-fadeIn">
+            <h1 className="text-3xl font-bold text-primary">
+              {t("Konto skapat!")}
+            </h1>
+            <p className="text-gray-700 text-base leading-6 max-w-[30rem]">
+              {t("Registreringen lyckades. Du kan logga in direkt.")}
+            </p>
+            <a href="/login" className="text-base font-medium leading-5 underline underline-offset-8">
+              {t("Logga in")}
+            </a>
+          </div>
+        ) : isSubmitted ? (
           <div className="text-center flex flex-col items-center gap-6 py-6 animate-fadeIn">
             <h1 className="text-3xl font-bold text-primary">
               {t("E-post skickat!")}

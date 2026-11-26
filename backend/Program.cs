@@ -86,7 +86,8 @@ builder.Services.AddAuthorizationBuilder()
 
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>(options =>
 {
-    options.SignIn.RequireConfirmedEmail = true;
+    // Set Auth__RequireConfirmedEmail=false for demo/showcase hosting without a mail server
+    options.SignIn.RequireConfirmedEmail = builder.Configuration.GetValue("Auth:RequireConfirmedEmail", true);
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<AthletiqaDbContext>();
@@ -101,9 +102,9 @@ builder.Services.ConfigureApplicationCookie(options =>
     }
     else
     {
-        // Production: cookie over HTTPS. Set CookieDomain (e.g. ".example.com") to share
-        // the cookie across subdomains; leave it empty when frontend and API share one origin (Azure).
-        options.Cookie.SameSite = SameSiteMode.Lax;
+        // Production: frontend and API are separate Azure web apps (different sites),
+        // so the auth cookie must be SameSite=None + Secure to be sent cross-site.
+        options.Cookie.SameSite = SameSiteMode.None;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         var cookieDomain = builder.Configuration["CookieDomain"];
         if (!string.IsNullOrWhiteSpace(cookieDomain))

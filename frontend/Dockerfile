@@ -18,8 +18,6 @@ FROM nginx:alpine
 
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY frontend/nginx.conf /etc/nginx/nginx.conf
-COPY frontend/docker-entrypoint.sh /docker-entrypoint-athletiqa.sh
-RUN sed -i 's/\r$//' /docker-entrypoint-athletiqa.sh && chmod 755 /docker-entrypoint-athletiqa.sh
 
 # Create cache directories and set permissions for non-root user (uid 1000)
 # pid file goes to /tmp, logs go to stdout/stderr, so only cache and html need chown
@@ -32,4 +30,4 @@ EXPOSE 5173
 
 USER 1000
 
-ENTRYPOINT ["/docker-entrypoint-athletiqa.sh"]
+CMD ["nginx", "-g", "daemon off;"]
