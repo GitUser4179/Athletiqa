@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../../shared/ui/button";
 import { PlusIcon, CheckCircleIcon } from "../../../shared/assets";
@@ -16,6 +16,11 @@ export function FollowButton({
   // Local follow state, kept in sync with the API result.
   const [following, setFollowing] = useState(initialIsFollowing);
 
+  // Profile/post data may arrive after the first render, keep in sync with it
+  useEffect(() => {
+    setFollowing(Boolean(initialIsFollowing));
+  }, [initialIsFollowing, athleteId]);
+
   // Hook handles the actual API call + loading state.
   const { handleToggleFollow, isLoading } = useFollowAthlete();
 
@@ -26,6 +31,7 @@ export function FollowButton({
       navigate("/login");
       return;
     }
+    if (!athleteId) return;
 
     const prev = following;
     setFollowing(!prev);

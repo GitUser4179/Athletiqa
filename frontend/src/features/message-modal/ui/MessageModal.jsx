@@ -26,9 +26,17 @@ import ChevronLeftIcon from "../../../shared/assets/chevron-left.svg?react";
 import { useTranslation } from "react-i18next";
 
 export function MessageModal() {
-  const { isOpen, closeChat } = useMessageStore();
+  const { isOpen, closeChat, pendingConversation, clearPendingConversation } = useMessageStore();
   const [activeTab, setActiveTab] = useState("chatt");
   const [selectedUser, setSelectedUser] = useState(null);
+
+  // Opened via "Kontakta" on a profile: jump straight into that conversation
+  useEffect(() => {
+    if (!isOpen || !pendingConversation) return;
+    setActiveTab("chatt");
+    setSelectedUser(pendingConversation);
+    clearPendingConversation();
+  }, [isOpen, pendingConversation, clearPendingConversation]);
   const [messages, setMessages] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [chatCount, setChatCount] = useState(0);

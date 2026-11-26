@@ -1,11 +1,36 @@
-// Stub APIs — replace with real fetch calls once backend has follow/unfollow endpoints
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
-export async function followAthlete(athleteId) {
-  console.log("TODO: backend follow endpoint not built. Pretending to follow:", athleteId);
-  return { athleteId, isFollowing: true };
+// athleteId = the athlete's public profile id
+async function sendFollow(athleteId, method) {
+  const response = await fetch(`${API_BASE}/api/athletes/${athleteId}/follow`, {
+    method,
+    credentials: "include",
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || `Failed to update follow: ${response.status}`);
+  }
+
+  return { athleteId, ...data }; // { isFollowing, followerCount }
 }
 
-export async function unfollowAthlete(athleteId) {
-  console.log("TODO: backend unfollow endpoint not built. Pretending to unfollow:", athleteId);
-  return { athleteId, isFollowing: false };
+export function followAthlete(athleteId) {
+  return sendFollow(athleteId, "POST");
+}
+
+export function unfollowAthlete(athleteId) {
+  return sendFollow(athleteId, "DELETE");
+}
+
+// Follower / following counts for the logged in user's own profile
+export async function getMyFollowStats() {
+  const response = await fetch(`${API_BASE}/api/users/me/follow-stats`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to load follow stats: ${response.status}`);
+  }
+  return response.json(); // { followers, following }
 }

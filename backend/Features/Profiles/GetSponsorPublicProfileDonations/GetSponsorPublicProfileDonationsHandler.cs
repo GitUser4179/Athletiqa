@@ -26,7 +26,8 @@ public class GetSponsorPublicProfileDonationsHandler(AthletiqaDbContext db)
 
         if (request.PublicProfileId is not null)
         {
-            query = query.Where(d => d.Sponsor!.PublicProfileId == request.PublicProfileId);
+            query = query.Where(d => d.Sponsor!.PublicProfileId == request.PublicProfileId &&
+                !(d.Sponsor.User.PrivacySetting != null && d.Sponsor.User.PrivacySetting.AnonymousDonations));
         }
         
         if (!string.IsNullOrWhiteSpace(request.SponsorId))

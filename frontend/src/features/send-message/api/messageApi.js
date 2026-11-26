@@ -18,13 +18,23 @@ export function getConnection() {
   return connection;
 }
 
-// Opens the websocket connection to the backend hub
+// The in-flight start, shared so concurrent callers all wait for the same connection
+let startPromise = null;
+
+// Opens the websocket connection to the backend hub.
+// Several effects call this at the same time when the chat opens; without the shared promise the
+// second caller would get a still-connecting connection and its JoinConversation call would fail,
+// so live messages never arrived.
 export async function startConnection() {
   const conn = getConnection();
-  // Only start if not already connected
-  if (conn.state === signalR.HubConnectionState.Disconnected) {
-    await conn.start();
+  if (conn.state === signalR.HubConnectionState.Connected) return conn;
+
+  if (!startPromise) {
+    startPromise = conn.start().finally(() => {
+      startPromise = null;
+    });
   }
+  await startPromise;
   return conn;
 }
 

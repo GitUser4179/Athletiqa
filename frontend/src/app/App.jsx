@@ -1,9 +1,12 @@
 import './styles/globals.css'
 import AppRouter from './providers/router/ui/AppRouter';
+import { ServerWakeGate } from './providers/server-wake';
 
 function App() {
   return (
-    <AppRouter/>
+    <ServerWakeGate>
+      <AppRouter/>
+    </ServerWakeGate>
   )
 }
 

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using backend.Features.Conversations.SendMessage;
 using backend.Infrastructure.Database;
+using backend.Features.Social;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Features.Conversation.Realtime;
@@ -45,6 +46,21 @@ public class ConversationHub : Hub
 			throw new HubException("Unauthorized");
 		}
 
+		// Don't deliver messages between users where either side has blocked the other
+		var conversation = await _db.Conversation
+			.Where(c => c.ConversationId == conversationId)
+			.Select(c => new { c.FirstUserId, c.SecondUserId })
+			.FirstOrDefaultAsync();
+		if (conversation is null || (conversation.FirstUserId != senderId && conversation.SecondUserId != senderId))
+		{
+			throw new HubException("Conversation not found");
+		}
+		var otherUserId = conversation.FirstUserId == senderId ? conversation.SecondUserId : conversation.FirstUserId;
+		if (await _db.IsBlockedBetweenAsync(senderId, otherUserId))
+		{
+			throw new HubException("You can't message this user");
+		}
+
 		var result = await _sender.Send(new SendMessageCommand
 		{
 			ConversationId = conversationId,
@@ -59,6 +75,7 @@ public class ConversationHub : Hub
 
 		await Clients.Group(conversationId.ToString()).SendAsync("ReceiveMessage", new
 		{
+			conversationId, // the client filters incoming messages by conversation
 			messageId = result.MessageId,
 			senderId,
 			senderName,

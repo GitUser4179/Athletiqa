@@ -22,7 +22,7 @@ export async function likePost(postId) {
 // Sends a DELETE request to unlike a post and returns the updated like state.
 export async function unlikePost(postId) {
   const response = await fetch(
-    `${API_BASE}/api/posts/${postId}/unlike`,
+    `${API_BASE}/api/posts/${postId}/like`,
     {
       method: "DELETE",
       credentials: "include",

@@ -28,6 +28,8 @@ namespace backend.Infrastructure.Database
 		public DbSet<Notification> Notification { get; set; }
         public DbSet<Sport> Sport => Set<Sport>();
         public DbSet<AthleteSport> AthleteSport => Set<AthleteSport>();
+		public DbSet<AthleteFollow> AthleteFollow => Set<AthleteFollow>();
+		public DbSet<UserBlock> UserBlock => Set<UserBlock>();
 
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -222,6 +224,39 @@ namespace backend.Infrastructure.Database
 					  .WithMany(u => u.Notifications)
 					  .HasForeignKey(n => n.UserId)
 					  .OnDelete(DeleteBehavior.Cascade);
+			});
+
+			// AthleteFollow: follower (any user) -> athlete. NoAction to avoid multiple cascade paths;
+			// rows are removed explicitly on block / account deletion.
+			modelBuilder.Entity<AthleteFollow>(entity =>
+			{
+				entity.HasOne(f => f.Follower)
+					.WithMany()
+					.HasForeignKey(f => f.FollowerId)
+					.OnDelete(DeleteBehavior.NoAction);
+
+				entity.HasOne(f => f.Athlete)
+					.WithMany()
+					.HasForeignKey(f => f.AthleteId)
+					.OnDelete(DeleteBehavior.NoAction);
+
+				entity.HasIndex(f => new { f.FollowerId, f.AthleteId }).IsUnique();
+			});
+
+			// UserBlock: blocker -> blocked user
+			modelBuilder.Entity<UserBlock>(entity =>
+			{
+				entity.HasOne(b => b.Blocker)
+					.WithMany()
+					.HasForeignKey(b => b.BlockerId)
+					.OnDelete(DeleteBehavior.NoAction);
+
+				entity.HasOne(b => b.Blocked)
+					.WithMany()
+					.HasForeignKey(b => b.BlockedId)
+					.OnDelete(DeleteBehavior.NoAction);
+
+				entity.HasIndex(b => new { b.BlockerId, b.BlockedId }).IsUnique();
 			});
 		}
 

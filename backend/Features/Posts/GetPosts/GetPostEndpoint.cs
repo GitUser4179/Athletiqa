@@ -8,9 +8,9 @@ public class GetPostModule : ICarterModule
 {
 	public void AddRoutes(IEndpointRouteBuilder app)
 	{
-		app.MapGet("/api/posts", async (ISender mediator, string? search) =>
+		app.MapGet("/api/posts", async (ISender mediator, ClaimsPrincipal user, string? search) =>
 		{
-			var posts = await mediator.Send(new GetPostQuery(search));
+			var posts = await mediator.Send(new GetPostQuery(search, CurrentUserId: user.FindFirstValue(ClaimTypes.NameIdentifier)));
 			return Results.Ok(posts);
 		});
 
@@ -23,7 +23,7 @@ public class GetPostModule : ICarterModule
                 return Results.Unauthorized();
             }
 
-            var posts = await mediator.Send(new GetPostQuery(searchWord: null, AthleteId: userId));
+            var posts = await mediator.Send(new GetPostQuery(searchWord: null, AthleteId: userId, CurrentUserId: userId));
             return Results.Ok(posts);
         }).RequireAuthorization();
     }

@@ -146,3 +146,48 @@ export async function updateAthleteSports(sports) {
     throw new Error("Ändringarna misslyckades, försök igen senare");
   }
 }
+//GET / UPDATE ANONYMITY
+export async function getPrivacy() {
+    const response = await fetch(`${API_BASE}/api/users/me/privacy`, { credentials: "include" });
+    if (!response.ok) throw new Error(`Failed to load privacy settings: ${response.status}`);
+    return response.json(); // { anonymous }
+}
+
+export async function updatePrivacy(anonymous) {
+    const response = await fetch(`${API_BASE}/api/users/me/privacy`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ anonymous }),
+    });
+    if (!response.ok) throw new Error(`Failed to save privacy settings: ${response.status}`);
+    return response.json();
+}
+
+//CHANGE PASSWORD (ASP.NET Identity's built-in /manage/info endpoint)
+export async function changePassword(currentPassword, newPassword) {
+    const response = await fetch(`${API_BASE}/api/manage/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ oldPassword: currentPassword, newPassword }),
+    });
+
+    if (!response.ok) {
+        // Identity returns a validation problem: { errors: { PasswordMismatch: [...], PasswordTooShort: [...] } }
+        const data = await response.json().catch(() => null);
+        const codes = Object.keys(data?.errors ?? {});
+        const error = new Error("Failed to change password");
+        error.codes = codes;
+        throw error;
+    }
+}
+
+//DELETE ACCOUNT (permanent)
+export async function deleteAccount() {
+    const response = await fetch(`${API_BASE}/api/users/me`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+    if (!response.ok) throw new Error(`Failed to delete account: ${response.status}`);
+}

@@ -1,4 +1,4 @@
-﻿using backend.Domain.Entities;
+using backend.Domain.Entities;
 using backend.Infrastructure.Database;
 using Carter;
 using MediatR;
@@ -9,7 +9,7 @@ using System.Security.Claims;
 namespace backend.Features.Conversations.GetConversation
 {
 	//Query to get all conversations for a user
-	public record ConversationItem(int ConversationId, string UserId, string Name); //UserId is the other user in the conversation
+	public record ConversationItem(int ConversationId, string UserId, string Name, string? AvatarUrl = null, string? LastMessage = null); //UserId is the other user in the conversation
 	public record GetConversationResult(List<ConversationItem> Conversations); //List of conversations for a user
 	public record GetConversationQuery(string UserId) : IRequest<GetConversationResult>; //UserId is the aspnet user id of the user for which we want to get the conversations
 
@@ -42,23 +42,36 @@ namespace backend.Features.Conversations.GetConversation
 		async Task<GetConversationResult> IRequestHandler<GetConversationQuery, GetConversationResult>.Handle(GetConversationQuery request, CancellationToken cancellationToken)
 		{
 
-			//Get all conversations for a user
-			var conversation = await _db.Conversation
-				.Include(c => c.FirstUser)
-					.ThenInclude(u => u.AspNetUser)
-				.Include(c => c.SecondUser)
-					.ThenInclude(u => u.AspNetUser)
-				.Where(u => u.FirstUserId == request.UserId || u.SecondUserId == request.UserId)
+			//Get all conversations for a user, except with users either side has blocked.
+			//(Each "other user" field is picked with its own conditional so EF can translate it to SQL.)
+			var uid = request.UserId;
+			var rows = await _db.Conversation
+				.Where(c => c.FirstUserId == uid || c.SecondUserId == uid)
+				.Select(c => new
+				{
+					c.ConversationId,
+					OtherId = c.FirstUserId == uid ? c.SecondUserId : c.FirstUserId,
+					FirstName = c.FirstUserId == uid ? c.SecondUser.AspNetUser.FirstName : c.FirstUser.AspNetUser.FirstName,
+					LastName = c.FirstUserId == uid ? c.SecondUser.AspNetUser.LastName : c.FirstUser.AspNetUser.LastName,
+					AthletePhoto = c.FirstUserId == uid ? c.SecondUser.AthleteProfile!.PhotoUrl : c.FirstUser.AthleteProfile!.PhotoUrl,
+					SponsorPhoto = c.FirstUserId == uid ? c.SecondUser.SponsorProfile!.PhotoUrl : c.FirstUser.SponsorProfile!.PhotoUrl,
+					LastMessage = c.Messages.OrderByDescending(m => m.TimeStamp).Select(m => m.Content).FirstOrDefault(),
+					LastAt = c.Messages.Max(m => (DateTime?)m.TimeStamp),
+				})
+				.Where(x => !_db.UserBlock.Any(b =>
+					(b.BlockerId == uid && b.BlockedId == x.OtherId) ||
+					(b.BlockerId == x.OtherId && b.BlockedId == uid)))
+				.OrderByDescending(x => x.LastAt)
 				.ToListAsync(cancellationToken);
 
-			//Map conversations to conversation items
-			var conversationItems = conversation.Select(c =>
-			{
-				var otherUser = c.FirstUserId == request.UserId ? c.SecondUser : c.FirstUser;
-				var name = $"{otherUser.AspNetUser.FirstName} {otherUser.AspNetUser.LastName}";
-
-				return new ConversationItem(c.ConversationId, otherUser.UserId, name);
-			}).ToList();
+			var conversationItems = rows
+				.Select(x => new ConversationItem(
+					x.ConversationId,
+					x.OtherId,
+					$"{x.FirstName} {x.LastName}",
+					x.AthletePhoto ?? x.SponsorPhoto,
+					x.LastMessage))
+				.ToList();
 
 			return new GetConversationResult(conversationItems);
 		}

@@ -1,4 +1,4 @@
-﻿using backend.Infrastructure.Database;
+using backend.Infrastructure.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +13,13 @@ public class GetPostHandler(AthletiqaDbContext db) : IRequestHandler<GetPostQuer
             .Include(p => p.MediaContents)
             .AsNoTracking() // Optimize for read-only access since we are not modifying the entities.
             .Where(p => p.DonationCampaign == null);// Only regular posts
+
+        if (!string.IsNullOrWhiteSpace(request.CurrentUserId))
+        {
+            result = result.Where(p => !db.UserBlock.Any(b =>
+                (b.BlockerId == request.CurrentUserId && b.BlockedId == p.AthleteId) ||
+                (b.BlockerId == p.AthleteId && b.BlockedId == request.CurrentUserId)));
+        }
 
         if (!string.IsNullOrWhiteSpace(request.AthleteId))
         {
@@ -44,7 +51,11 @@ public class GetPostHandler(AthletiqaDbContext db) : IRequestHandler<GetPostQuer
                 p.Athlete.User.AspNetUser.FirstName + " " + p.Athlete.User.AspNetUser.LastName,
                 p.Athlete.PhotoUrl,
                 (int)p.Athlete.Gender,
-                p.CreatedAt))
+                p.CreatedAt,
+                p.Likes.Count(),
+                p.Comments.Count(),
+                request.CurrentUserId != null && p.Likes.Any(l => l.UserId == request.CurrentUserId),
+                request.CurrentUserId != null && db.AthleteFollow.Any(f => f.AthleteId == p.AthleteId && f.FollowerId == request.CurrentUserId)))
             .ToListAsync(cancellationToken);
     }
 }

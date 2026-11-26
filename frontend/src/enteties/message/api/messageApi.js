@@ -27,3 +27,22 @@ export async function getConversations() {
   const data = await response.json();
   return data.conversations;
 }
+
+// Opens (or creates) the conversation with another user, identified by their public profile.
+// type: "athlete" | "sponsor"
+export async function startConversation(type, publicProfileId) {
+  const response = await fetch(`${API_BASE}/api/conversations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ type, publicProfileId }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.message || `Failed to start conversation: ${response.status}`);
+  }
+
+  return data;
+}

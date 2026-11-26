@@ -12,7 +12,6 @@ import { ForgotPasswordPage } from "../../../../pages/auth";
 import { ResetPasswordPage } from "../../../../pages/auth";
 import { AthleteProfilePage } from "../../../../pages/athlete-profile";
 import { SponsorProfile } from "../../../../pages/sponsor-profile";
-import { AdminDashboard } from "../../../../pages/admin";
 import { ExplorePage } from "../../../../pages/explore";
 import { CampaignDetailsPage } from "../../../../pages/campaign-details";
 // import CreateCampaignForm from '../../../../features/donate-to-campaign/ui/CampaignForm';
@@ -39,6 +38,7 @@ import { VerifyEmailPage } from "../../../../pages/auth";
 import { CreatePostPage } from "../../../../pages/create-post";
 import { Faq } from "../../../../pages/faq";
 import { HelpSection } from "../../../../features/update-settings";
+import { NotFoundPage, RouteErrorPage } from "../../../../pages/not-found";
 
 function RootLayout() {
   return (
@@ -62,6 +62,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
+    errorElement: <RouteErrorPage />,
     children: [
       { path: "/", element: <HomePage /> },
       { path: "/login", element: <LoginPage />, action: loginAction },
@@ -70,7 +71,6 @@ const router = createBrowserRouter([
       { path: "/athlete-profile/:id", element: <AthleteProfilePage /> },
       { path: "/sponsor-profile", element: <SponsorProfile /> },
       { path: "/sponsor-profile/:id", element: <SponsorProfile /> },
-      { path: "/admin", element: <AdminDashboard /> },
       { path: "/explore", element: <ExplorePage /> },
       {
         /* path: '/donate', element: <CreateCampaignForm /> */
@@ -108,6 +108,8 @@ const router = createBrowserRouter([
       { path: "/create-post", element: <CreatePostPage /> },
       { path: "/faq", element: <Faq /> },
       { path: "/help", element: <HelpSection /> },
+      // Catch-all: unknown URLs show the 404 page inside the normal layout
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

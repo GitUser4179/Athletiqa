@@ -1,18 +1,30 @@
+import { useState } from "react";
 import { Modal } from "../../../shared/ui/modal";
 import { Button } from "../../../shared/ui/button";
 import { useTranslation } from "react-i18next";
+import { blockUser } from "../api/blockApi";
 
-// Confirmation modal that appears when the user clicks "Blockera" from a comment's
-// dropdown menu. Currently just console.logs the user id, will hit the real
-// block API once the backend endpoint exists.
+// Confirmation modal for "Blockera" (from a profile's or comment's ⋯ menu).
+// `user` is { type: "athlete" | "sponsor", publicProfileId, name }.
 export function BlockUserModal({ isOpen, onClose, user, onConfirm }) {
   const { t } = useTranslation();
-  // Fires the (eventual) API call, notifies the parent + closes the modal.
-  const handleBlock = () => {
-    // TODO: call blockUserApi(user.userId) when backend is ready
-    console.log("TODO: block user", user?.userId ?? user?.id);
-    if (onConfirm) onConfirm(user);
-    onClose();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleBlock = async () => {
+    if (!user?.type || !user?.publicProfileId) return;
+    setIsLoading(true);
+    setError("");
+    try {
+      await blockUser(user.type, user.publicProfileId);
+      onClose();
+      if (onConfirm) onConfirm(user);
+    } catch (err) {
+      console.error(err);
+      setError(t("Kunde inte blockera användaren, försök igen."));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -28,11 +40,14 @@ export function BlockUserModal({ isOpen, onClose, user, onConfirm }) {
           {t("Blockerade användare kan inte se din profil, dina inlägg eller skicka meddelanden till dig.")}
         </p>
 
+        {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+
         {/* Confirm + cancel buttons stacked */}
         <div className="flex flex-col gap-2">
           <Button
             variant="danger"
             onClick={handleBlock}
+            disabled={isLoading}
             className="w-full py-3 font-medium !bg-red-600 !text-white !border-red-600 hover:!bg-red-700"
           >
             {t("Blockera användare")}

@@ -3,56 +3,127 @@ import { Button } from "../../../shared/ui/button";
 import { Switch } from "../../../shared/ui/switch";
 import { Alert } from "../../../shared/ui/alert";
 import { FormActions } from "../../../shared/ui/form-actions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { DeleteAccountSection } from "../ui";
 import { useFormState } from "../../../shared/lib/";
 import { BlockedUsersModal } from "../ui";
 import { checkRole } from "../../../shared/lib";
 import { ConnectStripeButton } from "../../connect-stripe-account/ui";
+import { getPrivacy, updatePrivacy, changePassword } from "../api/settingsApi";
 
-// Mock starting state. Password fields start empty,
-// anonymous flag starts off.
+// Password fields start empty; the anonymous flag is loaded from the API.
 const initialState = {
   anonymous: false,
   currentPassword: "",
   newPassword: "",
   confirmPassword: "",
 };
+
+// Identity's password error codes -> what to tell the user
+const PASSWORD_RULE_CODES = [
+  "PasswordTooShort",
+  "PasswordRequiresNonAlphanumeric",
+  "PasswordRequiresDigit",
+  "PasswordRequiresLower",
+  "PasswordRequiresUpper",
+  "PasswordRequiresUniqueChars",
+];
+
 export default function SecuritySettingsForm() {
   const { values: state, setField, handleChange } = useFormState(initialState);
   const { t } = useTranslation();
-  const toggleAnonymous = (next) => setField("anonymous", next);
   const [blockedOpen, setBlockedOpen] = useState(false);
-  const { role, loading } = checkRole();
+  const { role } = checkRole();
+
+  // Saved anonymity value from the server (the toggle compares against it)
+  const [savedAnonymous, setSavedAnonymous] = useState(false);
+  const [anonymousMessage, setAnonymousMessage] = useState({ text: "", type: "" });
+  const [passwordMessage, setPasswordMessage] = useState({ text: "", type: "" });
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+
+  useEffect(() => {
+    getPrivacy()
+      .then(({ anonymous }) => {
+        setSavedAnonymous(Boolean(anonymous));
+        setField("anonymous", Boolean(anonymous));
+      })
+      .catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toggleAnonymous = (next) => {
+    setAnonymousMessage({ text: "", type: "" });
+    setField("anonymous", next);
+  };
 
   // Save/cancel show when the anonymous flag differs from the saved value.
-  const anonymousDirty = state.anonymous !== initialState.anonymous;
+  const anonymousDirty = state.anonymous !== savedAnonymous;
 
-  const handleAnonymousSubmit = (e) => {
+  const handleAnonymousSubmit = async (e) => {
     e.preventDefault();
-    console.log("Saving anonymous:", state.anonymous);
-    // TODO: call settingsApi.updateAnonymity(state.anonymous)
+    try {
+      const { anonymous } = await updatePrivacy(state.anonymous);
+      setSavedAnonymous(Boolean(anonymous));
+      setAnonymousMessage({ text: t("Inställningen är sparad."), type: "success" });
+    } catch {
+      setAnonymousMessage({ text: t("Kunde inte spara, försök igen."), type: "error" });
+    }
   };
 
   const handleAnonymousCancel = () => {
-    setField("anonymous", initialState.anonymous);
+    setField("anonymous", savedAnonymous);
   };
 
   // Save/cancel only show when at least one password field has text.
   const passwordDirty =
     state.currentPassword || state.newPassword || state.confirmPassword;
 
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-    console.log("Saving password:", state);
-    // TODO: call settingsApi.updatePassword(state)
-  };
-  const handlePasswordCancel = () => {
+  const clearPasswordFields = () => {
     setField("currentPassword", "");
     setField("newPassword", "");
     setField("confirmPassword", "");
   };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordMessage({ text: "", type: "" });
+
+    if (!state.currentPassword || !state.newPassword) {
+      setPasswordMessage({ text: t("Fyll i nuvarande och nytt lösenord."), type: "error" });
+      return;
+    }
+    if (state.newPassword !== state.confirmPassword) {
+      setPasswordMessage({ text: t("Lösenorden matchar inte varandra"), type: "error" });
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      await changePassword(state.currentPassword, state.newPassword);
+      clearPasswordFields();
+      setPasswordMessage({ text: t("Lösenordet är ändrat."), type: "success" });
+    } catch (err) {
+      const codes = err.codes ?? [];
+      let text = t("Kunde inte ändra lösenordet, försök igen.");
+      if (codes.includes("PasswordMismatch")) {
+        text = t("Nuvarande lösenord är fel.");
+      } else if (codes.some((c) => PASSWORD_RULE_CODES.includes(c))) {
+        text = t("Lösenordet måste vara minst 6 tecken och innehålla stor och liten bokstav, en siffra och ett specialtecken.");
+      }
+      setPasswordMessage({ text, type: "error" });
+    } finally {
+      setIsSavingPassword(false);
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    clearPasswordFields();
+    setPasswordMessage({ text: "", type: "" });
+  };
+
+  const messageClass = (type) => (type === "error" ? "text-sm text-red-600" : "text-sm text-green-700");
 
   return (
     <div className="flex flex-col gap-10">
@@ -66,10 +137,12 @@ export default function SecuritySettingsForm() {
         </div>
 
         <Alert>
-          {t("Om du väljer att være anonym kommer varken andra atleter eller sponsorer kunna se din identitet.")}
+          {t("Om du väljer att vara anonym visas varken ditt namn eller din bild på dina kommentarer och donationer. Sponsorer som är anonyma har ingen publik profil.")}
           <br />
           {t("Att vara anonym minskar dock chansen att bli sponsrad, eftersom sponsorer oftast vill veta vem de donerar pengar till.")}
         </Alert>
+
+        {anonymousMessage.text && <p className={messageClass(anonymousMessage.type)}>{anonymousMessage.text}</p>}
 
         <FormActions show={anonymousDirty} onCancel={handleAnonymousCancel} />
       </form>
@@ -111,9 +184,9 @@ export default function SecuritySettingsForm() {
           onChange={handleChange}
         />
 
-        <a href="#" className="text-sm text-gray-700 underline w-fit">
+        <Link to="/forgot-password" className="text-sm text-gray-700 underline w-fit">
           {t("Glömt lösenord?")}
-        </a>
+        </Link>
 
         <FormField
           label={t("Nytt lösenord")}
@@ -131,8 +204,10 @@ export default function SecuritySettingsForm() {
           onChange={handleChange}
         />
 
+        {passwordMessage.text && <p className={messageClass(passwordMessage.type)}>{passwordMessage.text}</p>}
+
         <FormActions
-          show={!!passwordDirty}
+          show={!!passwordDirty && !isSavingPassword}
           submitLabel={t("Spara nytt lösenord")}
           onCancel={handlePasswordCancel}
         />

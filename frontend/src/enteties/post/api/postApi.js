@@ -39,3 +39,14 @@ export async function listMyPosts() {
 
     return data.map((postDto) => mapPostFromApi(postDto));
 }
+// Deletes one of the current user's own posts
+export async function deletePost(postId) {
+    const response = await fetch(`${API_BASE}/api/posts/${postId}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to delete post: ${response.status}`);
+    }
+}

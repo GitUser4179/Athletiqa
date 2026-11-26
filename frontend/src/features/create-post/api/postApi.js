@@ -4,7 +4,7 @@ export async function createPost(payload) {
     
   // const token = localStorage.getItem('token'); // JWT token but we use cookies for authentication, so this is not needed. Kept here for reference in case we switch to token-based auth in the future.
 
-  const response = await fetch(`${API_BASE}/posts`, {
+  const response = await fetch(`${API_BASE}/api/posts`, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',

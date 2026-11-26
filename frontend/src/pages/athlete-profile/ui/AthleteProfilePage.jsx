@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { getMyFollowStats } from "../../../features/follow-athlete";
 import { Link, Navigate, useParams } from "react-router-dom";
 import LoggedInAthleteProfile from "./LoggedInAthleteProfile";
 import PublicAthleteProfile from "./PublicAthleteProfile";
@@ -49,11 +50,12 @@ export default function AthleteProfilePage() {
       setProfileError(null);
 
       try {
-        const [profileData, sportsData, postsData, campaignsData] = await Promise.all([
+        const [profileData, sportsData, postsData, campaignsData, followStats] = await Promise.all([
           getAthleteProfile(),
           getAthleteSports(),
           listMyPosts(),
           listMyCampaigns(),
+          getMyFollowStats().catch(() => ({ followers: 0, following: 0 })),
         ]);
 
         const athleteName =
@@ -68,8 +70,8 @@ export default function AthleteProfilePage() {
             gender: profileData.gender,
             bio: profileData.bio ?? "",
             sports: sportsData?.sports ?? sportsData ?? [],
-            followers: 0,
-            following: 0,
+            followers: followStats.followers ?? 0,
+            following: followStats.following ?? 0,
           });
 
           setVisiblePosts(postsData);

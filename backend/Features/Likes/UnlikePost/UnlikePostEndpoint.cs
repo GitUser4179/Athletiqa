@@ -1,4 +1,4 @@
-﻿using Carter;
+using Carter;
 using MediatR;
 using System.Security.Claims;
 
@@ -9,7 +9,7 @@ namespace backend.Features.Likes.UnlikePost
 		public void AddRoutes(IEndpointRouteBuilder app)
 		{
 
-			app.MapDelete("posts/{postId}/like", async (int postId, ClaimsPrincipal user, ISender mediator, CancellationToken cancellationToken) =>
+			app.MapDelete("/api/posts/{postId}/like", async (int postId, ClaimsPrincipal user, ISender mediator, CancellationToken cancellationToken) =>
 			{
 				// Get the ASP.NET Identity user ID from the claims
 				var aspNetUserId = user.FindFirstValue(ClaimTypes.NameIdentifier);

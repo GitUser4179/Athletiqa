@@ -5,6 +5,7 @@ import { Button } from "../../../shared/ui/button";
 import { HeartIcon, MessageIcon } from "../../../shared/assets";
 import { formatRelativeTime } from "../../../shared/lib/formatDate";
 import { useTranslation } from "react-i18next";
+import { deletePost } from "../api/postApi";
 
 // Compact card for the post grid, click image/title/message icon onOpen.
 // `isOwnPost` adds a ⋯ menu in the corner with edit / delete shortcuts.
@@ -12,11 +13,14 @@ export function PostCard({
   post,
   onOpen,
   onToggleLike,
+  onDeleted,
   isOwnPost = false,
   isAuthenticated = false,
 }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [isDeleted, setIsDeleted] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   // Optimistic like state — heart fills instantly without waiting on the API
   const [liked, setLiked] = useState(post?.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(post?.likes ?? 0);
@@ -39,7 +43,7 @@ export function PostCard({
   }, [isMenuOpen]);
 
   // Early-return AFTER hooks so React's hook order stays stable
-  if (!post) return null;
+  if (!post || isDeleted) return null;
 
   // Use the first media item as the card preview
   const firstMedia = post.mediaContents?.[0];
@@ -54,6 +58,23 @@ export function PostCard({
   const postId = post.postId ?? post.id;
 
   const goToEdit = () => navigate(`/post/${post.postId ?? post.id}/edit`, { state: { post } });
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    setIsMenuOpen(false);
+    if (!window.confirm(t("Vill du radera inlägget? Det går inte att ångra."))) return;
+    setIsDeleting(true);
+    try {
+      await deletePost(postId);
+      setIsDeleted(true);
+      onDeleted?.(postId);
+    } catch (err) {
+      console.error(err);
+      window.alert(t("Kunde inte radera inlägget, försök igen."));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Sends the user to the author's profile when they click the avatar + name
   const handleAuthorNavigate = (e) => {
@@ -124,7 +145,8 @@ export function PostCard({
               </Button>
               <Button
                 variant="menuItem"
-                onClick={goToEdit}
+                onClick={handleDelete}
+                disabled={isDeleting}
                 className="text-red-600"
               >
                     {t("Radera")}

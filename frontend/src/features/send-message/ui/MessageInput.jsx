@@ -12,17 +12,28 @@ const QUICK_REPLIES = ["Tack!", "Hej!", "Jag svarar senare"];
 // Backend figures out who's sending based on the logged-in user cookie, so we don't need to pass senderId
 function MessageInput({ conversationId }) {
   const [content, setContent] = useState("");
+  const [error, setError] = useState("");
   const { t } = useTranslation();
 
   async function handleSend(e) {
     e.preventDefault();
     if (!content.trim()) return; // Don't send empty messages
-    await sendMessage(conversationId, content);
-    setContent(""); // Clear input after sending
+    setError("");
+    try {
+      await sendMessage(conversationId, content);
+      setContent(""); // Clear input after sending
+    } catch (err) {
+      console.error(err);
+      setError(t("Meddelandet kunde inte skickas."));
+    }
   }
 
   function handleQuickReply(text) {
-    sendMessage(conversationId, text);
+    setError("");
+    sendMessage(conversationId, text).catch((err) => {
+      console.error(err);
+      setError(t("Meddelandet kunde inte skickas."));
+    });
   }
 
   return (
@@ -39,6 +50,7 @@ function MessageInput({ conversationId }) {
           </button>
         ))}
       </div>  
+      {error && <p className="text-xs text-red-600">{error}</p>}
       <form onSubmit={handleSend} className="flex gap-2 items-center w-full">
         <Input
           value={content}

@@ -1,3 +1,4 @@
+import { useMessageStore } from "../../../shared/model/useMessageStore";
 import DashboardHeroActionCard from "./DashboardHeroActionCard";
 // import  DashboardHeroActionCard  from "./DashboardHeroActionCard";
 import Message from "../../../shared/assets/message.svg?react";
@@ -6,11 +7,12 @@ import Faq from "../../../shared/assets/faq.svg?react";
 
 import Stat  from "../../../shared/assets/statistik.svg?react";
 export default function AthleteDashboardHeroActions() {
+  const openChat = useMessageStore((state) => state.openChat);
   return (
     <div className="mx-auto flex gap-6 relative z-10">
       <DashboardHeroActionCard
         label="Meddelanden"
-        href="/messages"
+        onClick={openChat}
         icon={Message}
       />
       <DashboardHeroActionCard

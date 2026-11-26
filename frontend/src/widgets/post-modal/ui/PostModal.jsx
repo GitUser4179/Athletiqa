@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreateCommentForm } from "../../../features/create-comment";
-import { CommentCard } from "../../../enteties/comment";
+import { CommentCard, getComment } from "../../../enteties/comment";
 import { FollowButton } from "../../../features/follow-athlete";
 import { Modal } from "../../../shared/ui/modal";
 import { Avatar } from "../../../shared/ui/avatar";
@@ -38,6 +38,12 @@ export function PostModal({
   const [liked, setLiked] = useState(post?.isLiked ?? false);
   const [likeCount, setLikeCount] = useState(post?.likes ?? 0);
 
+  // The modal stays mounted while different posts are opened, so re-sync the like state per post
+  useEffect(() => {
+    setLiked(post?.isLiked ?? false);
+    setLikeCount(post?.likes ?? 0);
+  }, [post?.id, post?.postId]);
+
   // Media carousel index
   const media = post?.mediaContents ?? [];
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -48,7 +54,7 @@ export function PostModal({
   // Sends the user to the author's profile when they click the avatar + name
   const handleAuthorNavigate = (e) => {
     e.stopPropagation();
-    navigate(`/profile/${post?.authorId ?? post?.author}`, { state: { post } });
+    navigate(`/athlete-profile/${post?.athleteId ?? post?.authorId ?? ""}`, { state: { post } });
   };
 
   // Flip the heart locally, then fire the parent callback that hits the API
@@ -76,12 +82,22 @@ export function PostModal({
 
   const { t } = useTranslation();
 
-  // Load mock comments on open. Swap for getComment(postId) once the backend is seeded.
+  // Load the post's comments from the API when the modal opens
   useEffect(() => {
     if (!isOpen || !postId) return;
-    import("../../../shared/mocks").then(({ mockComments }) => {
-      setComments(mockComments.filter((c) => c.postId === postId));
-    });
+    let cancelled = false;
+    setIsLoading(true);
+    getComment(postId)
+      .then((data) => {
+        if (!cancelled) setComments(data);
+      })
+      .catch((err) => console.error("Error fetching comments:", err))
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen, postId]);
 
   // Reset to the default view whenever the modal closes

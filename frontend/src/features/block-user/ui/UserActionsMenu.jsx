@@ -5,7 +5,8 @@ import { BlockUserModal } from "./BlockUserModal";
 import { useTranslation } from "react-i18next";
 
 // User menu, guests go to login before block actions can open.
-export function UserActionsMenu({ user, className = "", isAuthenticated = false }) {
+// onBlocked: called after a successful block. Default: leave the page (a blocked profile is no longer visible).
+export function UserActionsMenu({ user, className = "", isAuthenticated = false, onBlocked }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -79,6 +80,7 @@ export function UserActionsMenu({ user, className = "", isAuthenticated = false 
         isOpen={isBlockModalOpen}
         onClose={() => setIsBlockModalOpen(false)}
         user={user}
+        onConfirm={(blocked) => (onBlocked ? onBlocked(blocked) : navigate("/explore"))}
       />
     </>
   );

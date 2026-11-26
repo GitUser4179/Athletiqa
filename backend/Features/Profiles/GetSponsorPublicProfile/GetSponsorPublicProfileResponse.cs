@@ -4,5 +4,6 @@ public record GetSponsorPublicProfileResponse(
     int PublicProfileId,
     string Name,
     string? Description,
-    string? PhotoUrl
+    string? PhotoUrl,
+    bool IsOwnProfile = false
 );

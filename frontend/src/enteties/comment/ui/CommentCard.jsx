@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserActionsMenu } from "../../../features/block-user";
 import { Avatar } from "../../../shared/ui/avatar";
@@ -8,10 +9,18 @@ import { formatRelativeTime } from "../../../shared/lib/formatDate";
 // The ⋯ menu opens a block-user confirmation modal (via UserActionsMenu).
 export function CommentCard({ comment, isAuthenticated = false }) {
   const navigate = useNavigate();
+  const [isHidden, setIsHidden] = useState(false);
+
+  // Anonymous authors (no type/id) have no profile to link to and can't be blocked
+  const hasProfile = Boolean(comment.authorType && comment.authorPublicProfileId);
 
   const handleAuthorNavigate = () => {
-    navigate(`/athlete-profile/${comment.userId ?? ""}`);
+    if (!hasProfile) return;
+    navigate(`/${comment.authorType}-profile/${comment.authorPublicProfileId}`);
   };
+
+  // Blocking the author hides their comment right away
+  if (isHidden) return null;
 
   return (
     <article className="flex gap-3 pb-4 border-b border-gray-200 last:border-b-0">
@@ -50,11 +59,14 @@ export function CommentCard({ comment, isAuthenticated = false }) {
           </time>
 
           {/* ⋯ menu (block / report) */}
-          <UserActionsMenu
-            user={{ userId: comment.userId, name: comment.authorName }}
-            className="ml-auto"
-            isAuthenticated={isAuthenticated}
-          />
+          {hasProfile && (
+            <UserActionsMenu
+              user={{ type: comment.authorType, publicProfileId: comment.authorPublicProfileId, name: comment.authorName }}
+              className="ml-auto"
+              isAuthenticated={isAuthenticated}
+              onBlocked={() => setIsHidden(true)}
+            />
+          )}
         </header>
 
         {/* Yellow comment bubble */}

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 // This widget is responsible for fetching and displaying a list of posts.
 // It uses the listPosts API function to get the data, maps it to the frontend format, and renders PostCard components.
-export function PostFeed({ searchTerm }) {
+export function PostFeed({ searchTerm, onPostOpen }) {
   const { t } = useTranslation();
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +68,7 @@ export function PostFeed({ searchTerm }) {
           <PostCard
             key={post.id}
             post={post}
+            onOpen={() => onPostOpen?.(post)}
             onToggleLike={handlePostLikeToggle}
             isAuthenticated={isAuthenticated}
           />

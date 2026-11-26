@@ -242,6 +242,35 @@ namespace backend.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.AthleteFollow", b =>
+                {
+                    b.Property<int>("AthleteFollowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AthleteFollowId"));
+
+                    b.Property<string>("AthleteId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FollowerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("AthleteFollowId");
+
+                    b.HasIndex("AthleteId");
+
+                    b.HasIndex("FollowerId", "AthleteId")
+                        .IsUnique();
+
+                    b.ToTable("AthleteFollow");
+                });
+
             modelBuilder.Entity("backend.Domain.Entities.AthleteProfile", b =>
                 {
                     b.Property<string>("UserId")
@@ -856,6 +885,35 @@ namespace backend.Migrations
                     b.ToTable("AppUsers");
                 });
 
+            modelBuilder.Entity("backend.Domain.Entities.UserBlock", b =>
+                {
+                    b.Property<int>("UserBlockId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserBlockId"));
+
+                    b.Property<string>("BlockedId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("BlockerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserBlockId");
+
+                    b.HasIndex("BlockedId");
+
+                    b.HasIndex("BlockerId", "BlockedId")
+                        .IsUnique();
+
+                    b.ToTable("UserBlock");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -905,6 +963,25 @@ namespace backend.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.AthleteFollow", b =>
+                {
+                    b.HasOne("backend.Domain.Entities.AthleteProfile", "Athlete")
+                        .WithMany()
+                        .HasForeignKey("AthleteId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("backend.Domain.Entities.User", "Follower")
+                        .WithMany()
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Athlete");
+
+                    b.Navigation("Follower");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.AthleteProfile", b =>
@@ -1132,6 +1209,25 @@ namespace backend.Migrations
                         .IsRequired();
 
                     b.Navigation("AspNetUser");
+                });
+
+            modelBuilder.Entity("backend.Domain.Entities.UserBlock", b =>
+                {
+                    b.HasOne("backend.Domain.Entities.User", "Blocked")
+                        .WithMany()
+                        .HasForeignKey("BlockedId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("backend.Domain.Entities.User", "Blocker")
+                        .WithMany()
+                        .HasForeignKey("BlockerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Blocked");
+
+                    b.Navigation("Blocker");
                 });
 
             modelBuilder.Entity("backend.Domain.Entities.ApplicationUser", b =>

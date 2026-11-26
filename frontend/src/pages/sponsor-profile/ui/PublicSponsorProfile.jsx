@@ -1,9 +1,8 @@
 import { CampaignCard } from "../../../enteties/campaign";
 import { Avatar } from "../../../shared/ui/avatar";
-import { Button } from "../../../shared/ui/button";
 import { Chip } from "../../../shared/ui/chip";
-import { ContactIcon } from "../../../shared/assets";
 import { UserActionsMenu } from "../../../features/block-user";
+import { ContactButton } from "../../../features/contact-user";
 import { useTranslation } from "react-i18next";
 
 // Sponsor's public profile view (viewed by anyone other than the sponsor themself).
@@ -42,19 +41,21 @@ export default function PublicSponsorProfile({
               />
             ) : null}
 
-            <Button
-              variant="outline"
-              className="px-5 py-2 rounded-xl font-medium flex items-center gap-2"
-            >
-              {t("Kontakta")}
-              <ContactIcon className="w-4 h-4" />
-            </Button>
+            {!sponsor.isOwnProfile && (
+              <>
+                <ContactButton
+                  type="sponsor"
+                  publicProfileId={sponsor.publicProfileId}
+                  isAuthenticated={isAuthenticated}
+                />
 
-            {/* More-actions menu (block + report later) */}
-            <UserActionsMenu
-              user={{ userId: sponsor.publicProfileId, name: sponsor.name }}
-              isAuthenticated={isAuthenticated}
-            />
+                {/* More-actions menu (block) */}
+                <UserActionsMenu
+                  user={{ type: "sponsor", publicProfileId: sponsor.publicProfileId, name: sponsor.name }}
+                  isAuthenticated={isAuthenticated}
+                />
+              </>
+            )}
           </div>
 
           {/* Sport chips */}

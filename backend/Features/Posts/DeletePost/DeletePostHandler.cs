@@ -16,7 +16,7 @@ public class DeletePostHandler(AthletiqaDbContext db) : IRequestHandler<DeletePo
 		// makes sure active user is same as creator of post
 		if(request.ActiveUserId != post.CreatedBy)
 		{
-			return Results.Forbid();
+			return Results.StatusCode(StatusCodes.Status403Forbidden);
 		}
 
 

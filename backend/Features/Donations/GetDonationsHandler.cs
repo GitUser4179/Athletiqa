@@ -1,4 +1,4 @@
-﻿using backend.Infrastructure.Database;
+using backend.Infrastructure.Database;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,7 +18,10 @@ namespace backend.Features.Donations
 
             var donationsList = await _context.Donation.Where(d => d.CampaignId == request.campaignId && d.Status == "succeeded")
                                           .OrderByDescending(d => d.CreatedAt)
-                                          .Select(d => new GetDonationsResponse(d.DonorName, d.Amount, d.CreatedAt))
+                                          .Select(d => new GetDonationsResponse(
+                                              d.Sponsor != null && d.Sponsor.User.PrivacySetting != null && d.Sponsor.User.PrivacySetting.AnonymousDonations
+                                                  ? "Anonym" : d.DonorName,
+                                              d.Amount, d.CreatedAt))
                                           .ToListAsync(cancellationToken);
 
             return donationsList;

@@ -75,8 +75,8 @@ export default function LoggedInAthleteProfile({
 
         {/* Follower / following stats sitting to the right */}
         <aside className="w-full sm:w-[17.75rem] flex gap-3 justify-center flex-shrink-0">
-          <StatCard value={athlete.followers} label={t("Följer")} className="flex-1" />
-          <StatCard value={athlete.following} label={t("Följare")} className="flex-1" />
+          <StatCard value={athlete.followers} label={t("Följare")} className="flex-1" />
+          <StatCard value={athlete.following} label={t("Följer")} className="flex-1" />
         </aside>
       </section>
 

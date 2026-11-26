@@ -1,13 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="sv">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="theme-color" content="#FAF9F6" />
+    <title>Athletiqa</title>
+    <!-- Boot screen styles: inline so they apply before the app's CSS/JS has loaded.
+         The same classes are reused by the React ServerWakeGate, so the hand-over is seamless. -->
+    <style>
+      .boot-screen {
+        position: fixed; inset: 0; z-index: 9999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.75rem;
+        padding: 2rem; text-align: center;
+        background: #FAF9F6; color: #252422;
+        font-family: "Karla", ui-sans-serif, system-ui, sans-serif;
+      }
+      .boot-wordmark {
+        margin: 0; font-size: 2.25rem; font-weight: 700; letter-spacing: 0.12em;
+        text-transform: uppercase; color: #0E3B6A;
+        animation: boot-breathe 2.4s ease-in-out infinite;
+      }
+      .boot-track {
+        position: relative; width: 12rem; height: 0.25rem; overflow: hidden;
+        border-radius: 9999px; background: #C2D7ED;
+      }
+      .boot-bar {
+        position: absolute; top: 0; bottom: 0; left: 0; width: 40%;
+        border-radius: 9999px; background: #0E3B6A;
+        animation: boot-slide 1.4s ease-in-out infinite;
+      }
+      .boot-message { margin: 0; max-width: 22rem; min-height: 3rem; font-size: 1rem; line-height: 1.5rem; color: #909090; }
+      .boot-message strong { display: block; color: #252422; font-weight: 600; }
+      .boot-retry {
+        margin-top: 0.25rem; padding: 0.625rem 1.75rem; border: 0; cursor: pointer;
+        font: inherit; font-weight: 700; color: #ffffff; background: #0E3B6A;
+      }
+      .boot-retry:hover { opacity: 0.9; }
+      .boot-fade-out { animation: boot-fade 0.3s ease-out forwards; }
+      @keyframes boot-slide { 0% { left: -40%; } 100% { left: 100%; } }
+      @keyframes boot-breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+      @keyframes boot-fade { to { opacity: 0; visibility: hidden; } }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-wordmark, .boot-bar { animation: none; }
+        .boot-bar { width: 100%; opacity: 0.6; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Replaced by React once the app mounts -->
+      <div class="boot-screen" role="status" aria-live="polite">
+        <p class="boot-wordmark">Athletiqa</p>
+        <div class="boot-track"><div class="boot-bar"></div></div>
+        <p class="boot-message">Laddar…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

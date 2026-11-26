@@ -3,7 +3,8 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 import { mapCommentFromApi } from '../../../enteties/comment/';
 
 export async function getComment(postId) {
-    const response = await fetch(`${API_BASE}/posts/${postId}/comments`, {
+    const response = await fetch(`${API_BASE}/api/posts/${postId}/comments`, {
+        credentials: "include",
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

@@ -17,7 +17,10 @@ public class GetAthletePublicProfilePostsHandler(AthletiqaDbContext db)
             .AsNoTracking()
             .Where(p =>
                 p.DonationCampaign == null &&
-                p.Athlete.PublicProfileId == request.PublicProfileId)
+                p.Athlete.PublicProfileId == request.PublicProfileId &&
+                (request.CurrentUserId == null || !db.UserBlock.Any(b =>
+                    (b.BlockerId == request.CurrentUserId && b.BlockedId == p.AthleteId) ||
+                    (b.BlockerId == p.AthleteId && b.BlockedId == request.CurrentUserId))))
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new GetPostResponse(
                 p.PostId,
@@ -34,7 +37,11 @@ public class GetAthletePublicProfilePostsHandler(AthletiqaDbContext db)
                 p.Athlete.User.AspNetUser.FirstName + " " + p.Athlete.User.AspNetUser.LastName,
                 p.Athlete.PhotoUrl,
                 (int)p.Athlete.Gender,
-                p.CreatedAt
+                p.CreatedAt,
+                p.Likes.Count(),
+                p.Comments.Count(),
+                request.CurrentUserId != null && p.Likes.Any(l => l.UserId == request.CurrentUserId),
+                request.CurrentUserId != null && db.AthleteFollow.Any(f => f.AthleteId == p.AthleteId && f.FollowerId == request.CurrentUserId)
             ))
             .ToListAsync(cancellationToken);
     }

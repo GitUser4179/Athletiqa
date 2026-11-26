@@ -26,7 +26,11 @@ public class GetPostByIdHandler(AthletiqaDbContext db) : IRequestHandler<GetPost
                 p.Athlete.User.AspNetUser.FirstName + " " + p.Athlete.User.AspNetUser.LastName,
                 p.Athlete.PhotoUrl,
                 (int)p.Athlete.Gender,
-                p.CreatedAt))
+                p.CreatedAt,
+                p.Likes.Count(),
+                p.Comments.Count(),
+                request.CurrentUserId != null && p.Likes.Any(l => l.UserId == request.CurrentUserId),
+                request.CurrentUserId != null && db.AthleteFollow.Any(f => f.AthleteId == p.AthleteId && f.FollowerId == request.CurrentUserId)))
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

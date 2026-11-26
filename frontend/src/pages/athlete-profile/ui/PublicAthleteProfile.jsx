@@ -5,10 +5,9 @@ import { CampaignCard } from "../../../enteties/campaign";
 import { PostCard } from "../../../enteties/post";
 import { PostModal } from "../../../widgets/post-modal";
 import { Avatar } from "../../../shared/ui/avatar";
-import { Button } from "../../../shared/ui/button";
 import { Chip } from "../../../shared/ui/chip";
-import { ContactIcon } from "../../../shared/assets";
 import { UserActionsMenu } from "../../../features/block-user";
+import { ContactButton } from "../../../features/contact-user";
 import { useTranslation } from "react-i18next";
 
 // Athlete's public profile view (viewed by anyone other than the athlete themself).
@@ -45,27 +44,28 @@ export default function PublicAthleteProfile({
           <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 w-full">
             <h1 className="text-xl text-primary font-bold">{athlete.name}</h1>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-center">
-              <FollowButton
-                athleteId={athlete?.athleteId}
-                initialIsFollowing={athlete?.isFollowing}
-                isAuthenticated={isAuthenticated}
-              />
+            {/* Actions are hidden when an athlete views their own public profile */}
+            {!athlete?.isOwnProfile && (
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-center">
+                <FollowButton
+                  athleteId={athlete?.publicProfileId}
+                  initialIsFollowing={athlete?.isFollowing}
+                  isAuthenticated={isAuthenticated}
+                />
 
-              <Button
-                variant="outline"
-                className="px-5 py-2 rounded-xl font-medium flex items-center gap-2"
-              >
-                {t("Kontakta")}
-                <ContactIcon className="w-4 h-4 inline-block" />
-              </Button>
+                <ContactButton
+                  type="athlete"
+                  publicProfileId={athlete?.publicProfileId}
+                  isAuthenticated={isAuthenticated}
+                />
 
-              {/* More-actions menu (block + report later) */}
-              <UserActionsMenu
-                user={{ userId: athlete.publicProfileId, name: athlete.name }}
-                isAuthenticated={isAuthenticated}
-              />
-            </div>
+                {/* More-actions menu (block) */}
+                <UserActionsMenu
+                  user={{ type: "athlete", publicProfileId: athlete.publicProfileId, name: athlete.name }}
+                  isAuthenticated={isAuthenticated}
+                />
+              </div>
+            )}
           </div>
 
           {/* Sport chips */}
